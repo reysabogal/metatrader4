@@ -161,8 +161,8 @@ int start()
    low_price=iLow(NULL,PeriodName,1);
    price_val = (high_price + low_price)/2;
    
-   if (pband == 1 && price_val < FMA_Current) OPSELL(); pband = 0;
-   if (pband1 == 1 && price_val > FMA_Current) OPBUY();  pband1 =0;     
+   if (pband == 1 && high_price < FMA_Current) OPSELL(); pband = 0;
+   if (pband1 == 1 && low_price > FMA_Current) OPBUY();  pband1 =0;     
     
 //--- close position by signal
 
