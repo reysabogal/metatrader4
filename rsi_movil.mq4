@@ -3,8 +3,8 @@
 //|                        Copyright 2015, MetaQuotes Software Corp. |
 //|                           http://free-bonus-deposit.blogspot.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2015, dXerof"
-#property link      "http://free-bonus-deposit.blogspot.com"
+#property copyright "Personal48"
+#property link      ""
 #property version   "1.00"
 #property strict
 
@@ -60,9 +60,7 @@ int FastMA;
 double price_val,high_price,low_price;
 extern string Timeframe="M1";
 int PeriodName=0;
-int pband=0;
-int pband1=0;
-
+string display="";
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -121,7 +119,10 @@ int start()
   {
    double stoplevel=MarketInfo(Symbol(),MODE_STOPLEVEL);
    OrderBuy=0;
-   OrderSell=0;
+   OrderSell=0;   
+   static int pcom;
+   static int pven;
+           
    for(int cnt=0; cnt<OrdersTotal(); cnt++)
      {
       if(OrderSelect(cnt,SELECT_BY_POS,MODE_TRADES))
@@ -151,25 +152,46 @@ int start()
    double rsi=iRSI(Symbol(),0,RSIperiod,PRICE_CLOSE,0);
    double rsi1=iRSI(Symbol(),0,RSIperiod,PRICE_CLOSE,1);
      
-
+     
+   display = StringConcatenate("rsi=",rsi," rsi1=",rsi1," ");
+   
 //--- open position
-   if(OpenSELL && OrderSell<1 && rsi<SellLevel && rsi1>SellLevel) pband = 1;
-   if(OpenBUY && OrderBuy<1 && rsi>BuyLevel && rsi1<BuyLevel) pband1 = 1;
+      if(OpenSELL && OrderSell<1 && rsi>SellLevel && rsi1>SellLevel)
+      {
+       pcom++;
+       display = StringConcatenate(display,"entro sobrecomprado ");
+      } 
+      if(OpenBUY && OrderBuy<1 && rsi<BuyLevel && rsi1<BuyLevel)     
+      {
+         pven++;
+         display = StringConcatenate(display,"entro sobrevendido ");
+      }
+   
+   display = StringConcatenate(display," \n pcom=",pcom," pven=",pven," ");
+   Comment (display);
    
    double FMA_Current = iMA(NULL, 0, Period_1, 0, MA_Method, PRICE_CLOSE, 0);
    high_price=iHigh(NULL,PeriodName,1);
    low_price=iLow(NULL,PeriodName,1);
-   price_val = (high_price + low_price)/2;
-   
-   if (pband == 1 && high_price < FMA_Current) OPSELL(); pband = 0;
-   if (pband1 == 1 && low_price > FMA_Current) OPBUY();  pband1 =0;     
+   price_val = (high_price + low_price)/2;  
+         
+   if (pcom >= 1 && high_price < FMA_Current)
+   {       
+      OPSELL(); 
+      pcom = 0;
+   }
+   if (pven >= 1 && low_price > FMA_Current) 
+   {
+      OPBUY(); 
+      pven = 0;   
+   }   
     
 //--- close position by signal
 
    if(CloseBySignal)
      {
-      if(OrderBuy>0 && rsi<SellLevel && rsi1>SellLevel) CloseBuy();
-      if(OrderSell>0 && rsi>BuyLevel && rsi1<BuyLevel) CloseSell();
+      if(OrderBuy>0 && rsi>SellLevel && rsi1>SellLevel)CloseBuy();
+      if(OrderSell>0 && rsi<BuyLevel && rsi1<BuyLevel) CloseSell();
      }
 	 
 //---
@@ -256,3 +278,29 @@ double LOT()
    return(lotsi);
   }
 //+------------------------------------------------------------------+
+int valid(int a1)
+{
+static int b1;
+
+// la que viene de rsi
+if(a1==1 && b1 == 0)
+{
+   b1 = a1;
+}
+// la que pregunta el valor
+if(a1==10 && b1 == 0)
+{
+   b1 = 0;
+}
+if(a1==10 && b1 == 1)
+{
+   b1 = 1;
+}
+// la que lo vuelve cero
+if(a1==0 && b1 == 1)
+{
+   b1 = 0;
+}
+
+return b1;
+}
